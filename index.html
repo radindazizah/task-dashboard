@@ -41,19 +41,6 @@ th{background:#e0f2f1}
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginBox" class="form-box">
-  <h3>Login</h3>
-  <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-  <button class="secondary" onclick="register()">Register</button>
-</div>
-
-<!-- APP -->
-<div id="app" style="display:none;">
-<button onclick="logout()">Logout</button>
-
 <div class="dashboard">
   <div class="card"><h2 id="total">0</h2><p>Total</p></div>
   <div class="card"><h2 id="todo">0</h2><p>To Do</p></div>
@@ -69,12 +56,15 @@ th{background:#e0f2f1}
 <textarea id="desc" placeholder="Deskripsi"></textarea>
 <select id="type"><option>Task</option><option>Kendala</option></select>
 <select id="status">
-<option>To Do</option><option>Progress</option>
-<option>Blocked</option><option>Done</option><option>Reopen</option>
+  <option>To Do</option>
+  <option>Progress</option>
+  <option>Blocked</option>
+  <option>Done</option>
+  <option>Reopen</option>
 </select>
 <input id="dev" placeholder="Pengembang">
 <textarea id="solution" placeholder="Solusi (wajib jika Done)"></textarea>
-<input id="imageUrls" placeholder="Link gambar (pisahkan koma)">
+<input type="file" id="images" multiple accept="image/*">
 </div>
 <button onclick="submitTask()">Simpan</button>
 <button id="cancelBtn" class="secondary" onclick="cancelEdit()" style="display:none">Batal</button>
@@ -82,11 +72,13 @@ th{background:#e0f2f1}
 
 <table>
 <thead>
-<tr><th>Deskripsi</th><th>Type</th><th>Status</th><th>Dev</th><th>Solusi</th><th>Gambar</th><th>Aksi</th></tr>
+<tr>
+  <th>Deskripsi</th><th>Type</th><th>Status</th>
+  <th>Dev</th><th>Solusi</th><th>Gambar</th><th>Aksi</th>
+</tr>
 </thead>
 <tbody id="taskBody"></tbody>
 </table>
-</div>
 
 <div id="imageModal" onclick="closeModal()">
 <span>&times;</span><img id="modalImg">
@@ -94,91 +86,140 @@ th{background:#e0f2f1}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* ====== GANTI INI ====== */
 const firebaseConfig = {
-  apiKey: "AIzaSyBwc0ZetyNIhxc-tXnpC9aIVzguRmc29h8",
-  authDomain: "pilarb3.firebaseapp.com",
-  projectId: "pilarb3"
+  apiKey: "API_KEY_KAMU",
+  authDomain: "PROJECT.firebaseapp.com",
+  projectId: "PROJECT_ID"
 };
 
+const CLOUD_NAME = "CLOUD_NAME_KAMU";
+const UPLOAD_PRESET = "UPLOAD_PRESET_KAMU";
+/* ====================== */
+
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser=null, tasks=[], editIndex=null;
+let tasks = [];
+let editIndex = null;
 
-window.login=()=>signInWithEmailAndPassword(auth,email.value,password.value);
-window.register=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
-window.logout=()=>signOut(auth);
+/* ===== CLOUDINARY UPLOAD ===== */
+async function uploadToCloudinary(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("upload_preset", UPLOAD_PRESET);
 
-onAuthStateChanged(auth, u => {
-  if (u) {
-    currentUser = u.uid;
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    loadTasks();
-  } else {
-    document.getElementById("loginBox").style.display = "block";
-    document.getElementById("app").style.display = "none";
-  }
-});
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    { method:"POST", body: fd }
+  );
+  const data = await res.json();
+  return data.secure_url;
+}
+
+/* ===== FIRESTORE ===== */
 async function loadTasks(){
   tasks=[];
-  const q=query(collection(db,"users",currentUser,"tasks"),orderBy("createdAt","desc"));
+  const q=query(collection(db,"tasks"),orderBy("createdAt","desc"));
   const snap=await getDocs(q);
   snap.forEach(d=>tasks.push({id:d.id,...d.data()}));
   render();
 }
 
-window.submitTask=async()=>{
-  if(status.value==="Done"&&!solution.value.trim())return alert("Solusi wajib");
-  const images=imageUrls.value.split(",").map(v=>v.trim()).filter(v=>v);
-  const data={desc:desc.value,type:type.value,status:status.value,dev:dev.value,solution:solution.value,images,createdAt:serverTimestamp()};
-  if(editIndex!=null){
-    await updateDoc(doc(db,"users",currentUser,"tasks",tasks[editIndex].id),data);
-  }else{
-    await addDoc(collection(db,"users",currentUser,"tasks"),data);
+window.submitTask = async () => {
+  if(status.value==="Done" && !solution.value.trim()){
+    alert("Solusi wajib diisi jika Done");
+    return;
   }
-  resetForm(); loadTasks();
+
+  const urls=[];
+  for(const f of images.files){
+    urls.push(await uploadToCloudinary(f));
+  }
+
+  const data={
+    desc:desc.value,
+    type:type.value,
+    status:status.value,
+    dev:dev.value,
+    solution:solution.value,
+    images:urls,
+    createdAt:serverTimestamp()
+  };
+
+  if(editIndex!==null){
+    await updateDoc(doc(db,"tasks",tasks[editIndex].id),data);
+  } else {
+    await addDoc(collection(db,"tasks"),data);
+  }
+
+  resetForm();
+  loadTasks();
 };
 
-window.deleteTask=async i=>{
-  if(confirm("Hapus task?")){await deleteDoc(doc(db,"users",currentUser,"tasks",tasks[i].id));loadTasks();}
+window.deleteTask = async i=>{
+  if(confirm("Hapus task?")){
+    await deleteDoc(doc(db,"tasks",tasks[i].id));
+    loadTasks();
+  }
 };
 
-window.editTask=i=>{
-  const t=tasks[i]; desc.value=t.desc; type.value=t.type; status.value=t.status;
-  dev.value=t.dev; solution.value=t.solution; imageUrls.value=t.images.join(",");
+window.editTask = i=>{
+  const t=tasks[i];
+  desc.value=t.desc; type.value=t.type;
+  status.value=t.status; dev.value=t.dev;
+  solution.value=t.solution;
   editIndex=i; cancelBtn.style.display="inline";
 };
 
-window.cancelEdit=()=>resetForm();
+window.cancelEdit = ()=>resetForm();
 
-function resetForm(){desc.value=dev.value=solution.value=imageUrls.value="";editIndex=null;cancelBtn.style.display="none"}
+function resetForm(){
+  desc.value=dev.value=solution.value="";
+  images.value=""; editIndex=null;
+  cancelBtn.style.display="none";
+}
 
-function badge(s){return `<span class="badge ${s.replace(" ","").toLowerCase()}">${s}</span>`}
+function badge(s){
+  return `<span class="badge ${s.replace(" ","").toLowerCase()}">${s}</span>`;
+}
 
 function render(){
   taskBody.innerHTML="";
   tasks.forEach((t,i)=>{
     taskBody.innerHTML+=`
     <tr>
-      <td>${t.desc}</td><td>${t.type}</td><td>${badge(t.status)}</td>
-      <td>${t.dev}</td><td>${t.solution||"—"}</td>
+      <td>${t.desc}</td>
+      <td>${t.type}</td>
+      <td>${badge(t.status)}</td>
+      <td>${t.dev}</td>
+      <td>${t.solution||"—"}</td>
       <td>${t.images.map(img=>`<img src="${img}" class="thumbnail" onclick="openModal('${img}')">`).join("")}</td>
-      <td><span class="action-btn" onclick="editTask(${i})">Edit</span> | <span class="action-btn" onclick="deleteTask(${i})">Delete</span></td>
+      <td>
+        <span class="action-btn" onclick="editTask(${i})">Edit</span> |
+        <span class="action-btn" onclick="deleteTask(${i})">Delete</span>
+      </td>
     </tr>`;
   });
+
   total.innerText=tasks.length;
+  todo.innerText=tasks.filter(t=>t.status==="To Do").length;
+  progress.innerText=tasks.filter(t=>t.status==="Progress").length;
+  blocked.innerText=tasks.filter(t=>t.status==="Blocked").length;
+  done.innerText=tasks.filter(t=>t.status==="Done").length;
+  reopen.innerText=tasks.filter(t=>t.status==="Reopen").length;
 }
 
-window.openModal=src=>{modalImg.src=src;imageModal.style.display="flex"}
-window.closeModal=()=>imageModal.style.display="none"
+window.openModal = src=>{
+  modalImg.src=src;
+  imageModal.style.display="flex";
+};
+window.closeModal = ()=>imageModal.style.display="none";
+
+loadTasks();
 </script>
 
 </body>
 </html>
-
-
