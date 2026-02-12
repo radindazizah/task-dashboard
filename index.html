@@ -113,13 +113,17 @@ window.login=()=>signInWithEmailAndPassword(auth,email.value,password.value);
 window.register=()=>createUserWithEmailAndPassword(auth,email.value,password.value);
 window.logout=()=>signOut(auth);
 
-onAuthStateChanged(auth,u=>{
-  if(u){currentUser=u.uid;loginBox.style.display="none";
-        document.getElementById("app").style.display = "block";
-        loadTasks();}
-  else{loginBox.style.display="block";app.style.display="none";}
+onAuthStateChanged(auth, u => {
+  if (u) {
+    currentUser = u.uid;
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("app").style.display = "block";
+    loadTasks();
+  } else {
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("app").style.display = "none";
+  }
 });
-
 async function loadTasks(){
   tasks=[];
   const q=query(collection(db,"users",currentUser,"tasks"),orderBy("createdAt","desc"));
@@ -176,4 +180,5 @@ window.closeModal=()=>imageModal.style.display="none"
 
 </body>
 </html>
+
 
