@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-* { box-sizing:border-box; font-family:"Work Sans",sans-serif }
-body { margin:0; background:#f6fbfa; padding:20px }
+*{box-sizing:border-box;font-family:"Work Sans",sans-serif}
+body{margin:0;background:#f6fbfa;padding:20px}
 
 .dashboard{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
 .card{flex:1;background:#fff;padding:14px;border-radius:14px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.08)}
@@ -17,30 +17,55 @@ body { margin:0; background:#f6fbfa; padding:20px }
 
 .form-box{background:#fff;padding:16px;border-radius:14px;margin-bottom:16px;box-shadow:0 2px 6px rgba(0,0,0,.08)}
 .form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-input,textarea,select{padding:8px 10px;border-radius:10px;border:1px solid #ccc;font-size:14px}
+
+input,textarea,select{
+  padding:8px 10px;border-radius:10px;border:1px solid #ccc;font-size:14px
+}
 textarea{resize:vertical}
-button{margin-top:12px;padding:10px 18px;border-radius:12px;border:none;background:#4db6ac;color:#fff;cursor:pointer}
+
+button{
+  margin-top:12px;padding:10px 18px;border-radius:12px;
+  border:none;background:#4db6ac;color:#fff;cursor:pointer
+}
 button.secondary{background:#90a4ae}
 
-table{width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+table{
+  width:100%;background:#fff;border-radius:14px;overflow:hidden;
+  box-shadow:0 2px 6px rgba(0,0,0,.08)
+}
 th,td{padding:10px;border-bottom:1px solid #eee}
 th{background:#e0f2f1}
-.thumbnail{width:56px;height:56px;border-radius:8px;object-fit:cover;cursor:pointer;margin:4px}
+
+.thumbnail{
+  width:56px;height:56px;border-radius:8px;
+  object-fit:cover;cursor:pointer;margin:4px
+}
 
 .badge{padding:4px 10px;border-radius:999px;font-size:12px;color:#fff}
-.todo{background:#90a4ae}.progress{background:#42a5f5}
-.blocked{background:#ef5350}.done{background:#66bb6a}.reopen{background:#ffa726}
+.todo{background:#90a4ae}
+.progress{background:#42a5f5}
+.blocked{background:#ef5350}
+.done{background:#66bb6a}
+.reopen{background:#ffa726}
 
 .action-btn{cursor:pointer;color:#00796b;font-weight:500}
 
-#imageModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);justify-content:center;align-items:center}
+#imageModal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.7);
+  justify-content:center;align-items:center
+}
 #imageModal img{max-width:80%;max-height:80%;border-radius:16px}
-#imageModal span{position:absolute;top:20px;right:30px;color:#fff;font-size:32px;cursor:pointer}
+#imageModal span{
+  position:absolute;top:20px;right:30px;
+  color:#fff;font-size:32px;cursor:pointer
+}
 </style>
 </head>
 
 <body>
 
+<!-- DASHBOARD -->
 <div class="dashboard">
   <div class="card"><h2 id="total">0</h2><p>Total</p></div>
   <div class="card"><h2 id="todo">0</h2><p>To Do</p></div>
@@ -50,63 +75,92 @@ th{background:#e0f2f1}
   <div class="card"><h2 id="reopen">0</h2><p>Reopen</p></div>
 </div>
 
+<!-- FORM -->
 <div class="form-box">
 <h3 id="formTitle">Tambah Task</h3>
 <div class="form-grid">
-<textarea id="desc" placeholder="Deskripsi"></textarea>
-<select id="type"><option>Task</option><option>Kendala</option></select>
-<select id="status">
-  <option>To Do</option>
-  <option>Progress</option>
-  <option>Blocked</option>
-  <option>Done</option>
-  <option>Reopen</option>
-</select>
-<input id="dev" placeholder="Pengembang">
-<textarea id="solution" placeholder="Solusi (wajib jika Done)"></textarea>
-<input type="file" id="images" multiple accept="image/*">
-</div>
-<button onclick="submitTask()">Simpan</button>
-<button id="cancelBtn" class="secondary" onclick="cancelEdit()" style="display:none">Batal</button>
+  <textarea id="desc" placeholder="Deskripsi"></textarea>
+
+  <select id="type">
+    <option value="Task">Task</option>
+    <option value="Kendala">Kendala</option>
+  </select>
+
+  <select id="status">
+    <option value="To Do">To Do</option>
+    <option value="Progress">Progress</option>
+    <option value="Blocked">Blocked</option>
+    <option value="Done">Done</option>
+    <option value="Reopen">Reopen</option>
+  </select>
+
+  <input id="dev" placeholder="Pengembang">
+  <textarea id="solution" placeholder="Solusi (wajib jika Done)"></textarea>
+  <input type="file" id="images" multiple accept="image/*">
 </div>
 
+<button type="button" onclick="submitTask()">Simpan</button>
+<button type="button" id="cancelBtn" class="secondary" onclick="cancelEdit()" style="display:none">Batal</button>
+</div>
+
+<!-- TABLE -->
 <table>
 <thead>
 <tr>
-  <th>Deskripsi</th><th>Type</th><th>Status</th>
-  <th>Dev</th><th>Solusi</th><th>Gambar</th><th>Aksi</th>
+  <th>Deskripsi</th>
+  <th>Type</th>
+  <th>Status</th>
+  <th>Pengembang</th>
+  <th>Solusi</th>
+  <th>Gambar</th>
+  <th>Aksi</th>
 </tr>
 </thead>
 <tbody id="taskBody"></tbody>
 </table>
 
+<!-- MODAL -->
 <div id="imageModal" onclick="closeModal()">
-<span>&times;</span><img id="modalImg">
+  <span>&times;</span>
+  <img id="modalImg">
 </div>
 
 <script type="module">
+/* ================= FIREBASE ================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc, getDocs,
+  query, orderBy, serverTimestamp,
+  updateDoc, deleteDoc, doc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* ====== GANTI INI ====== */
+/* ================= CONFIG ================= */
 const firebaseConfig = {
-  apiKey: "API_KEY_KAMU",
-  authDomain: "PROJECT.firebaseapp.com",
-  projectId: "PROJECT_ID"
+  apiKey: "AIzaSyBwc0ZetyNIhxc-tXnpC9aIVzguRmc29h8",
+  authDomain: "pilarb3.firebaseapp.com",
+  projectId: "pilarb3"
 };
 
-const CLOUD_NAME = "CLOUD_NAME_KAMU";
-const UPLOAD_PRESET = "UPLOAD_PRESET_KAMU";
-/* ====================== */
+const CLOUD_NAME = "dq3ctvi3r";
+const UPLOAD_PRESET = "task_dashboard";
 
+/* ================= INIT ================= */
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+/* ================= ELEMENT ================= */
+const descEl = document.getElementById("desc");
+const typeEl = document.getElementById("type");
+const statusEl = document.getElementById("status");
+const devEl = document.getElementById("dev");
+const solutionEl = document.getElementById("solution");
+const imagesEl = document.getElementById("images");
 
 let tasks = [];
 let editIndex = null;
 
-/* ===== CLOUDINARY UPLOAD ===== */
-async function uploadToCloudinary(file) {
+/* ================= CLOUDINARY ================= */
+async function uploadToCloudinary(file){
   const fd = new FormData();
   fd.append("file", file);
   fd.append("upload_preset", UPLOAD_PRESET);
@@ -115,11 +169,12 @@ async function uploadToCloudinary(file) {
     `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
     { method:"POST", body: fd }
   );
+
   const data = await res.json();
   return data.secure_url;
 }
 
-/* ===== FIRESTORE ===== */
+/* ================= FIRESTORE ================= */
 async function loadTasks(){
   tasks=[];
   const q=query(collection(db,"tasks"),orderBy("createdAt","desc"));
@@ -129,23 +184,23 @@ async function loadTasks(){
 }
 
 window.submitTask = async () => {
-  if(status.value==="Done" && !solution.value.trim()){
+  if(statusEl.value==="Done" && !solutionEl.value.trim()){
     alert("Solusi wajib diisi jika Done");
     return;
   }
 
-  const urls=[];
-  for(const f of images.files){
-    urls.push(await uploadToCloudinary(f));
+  const imageUrls=[];
+  for(const f of imagesEl.files){
+    imageUrls.push(await uploadToCloudinary(f));
   }
 
   const data={
-    desc:desc.value,
-    type:type.value,
-    status:status.value,
-    dev:dev.value,
-    solution:solution.value,
-    images:urls,
+    desc:descEl.value,
+    type:typeEl.value,
+    status:statusEl.value,
+    dev:devEl.value,
+    solution:solutionEl.value,
+    images:imageUrls,
     createdAt:serverTimestamp()
   };
 
@@ -159,26 +214,32 @@ window.submitTask = async () => {
   loadTasks();
 };
 
-window.deleteTask = async i=>{
+window.deleteTask = async (i)=>{
   if(confirm("Hapus task?")){
     await deleteDoc(doc(db,"tasks",tasks[i].id));
     loadTasks();
   }
 };
 
-window.editTask = i=>{
+window.editTask = (i)=>{
   const t=tasks[i];
-  desc.value=t.desc; type.value=t.type;
-  status.value=t.status; dev.value=t.dev;
-  solution.value=t.solution;
-  editIndex=i; cancelBtn.style.display="inline";
+  descEl.value=t.desc;
+  typeEl.value=t.type;
+  statusEl.value=t.status;
+  devEl.value=t.dev;
+  solutionEl.value=t.solution || "";
+  editIndex=i;
+  cancelBtn.style.display="inline";
 };
 
 window.cancelEdit = ()=>resetForm();
 
 function resetForm(){
-  desc.value=dev.value=solution.value="";
-  images.value=""; editIndex=null;
+  descEl.value="";
+  devEl.value="";
+  solutionEl.value="";
+  imagesEl.value="";
+  editIndex=null;
   cancelBtn.style.display="none";
 }
 
@@ -190,18 +251,21 @@ function render(){
   taskBody.innerHTML="";
   tasks.forEach((t,i)=>{
     taskBody.innerHTML+=`
-    <tr>
-      <td>${t.desc}</td>
-      <td>${t.type}</td>
-      <td>${badge(t.status)}</td>
-      <td>${t.dev}</td>
-      <td>${t.solution||"—"}</td>
-      <td>${t.images.map(img=>`<img src="${img}" class="thumbnail" onclick="openModal('${img}')">`).join("")}</td>
-      <td>
-        <span class="action-btn" onclick="editTask(${i})">Edit</span> |
-        <span class="action-btn" onclick="deleteTask(${i})">Delete</span>
-      </td>
-    </tr>`;
+      <tr>
+        <td>${t.desc}</td>
+        <td>${t.type}</td>
+        <td>${badge(t.status)}</td>
+        <td>${t.dev}</td>
+        <td>${t.solution||"—"}</td>
+        <td>
+          ${t.images.map(img=>`<img src="${img}" class="thumbnail" onclick="openModal('${img}')">`).join("")}
+        </td>
+        <td>
+          <span class="action-btn" onclick="editTask(${i})">Edit</span> |
+          <span class="action-btn" onclick="deleteTask(${i})">Delete</span>
+        </td>
+      </tr>
+    `;
   });
 
   total.innerText=tasks.length;
@@ -212,7 +276,7 @@ function render(){
   reopen.innerText=tasks.filter(t=>t.status==="Reopen").length;
 }
 
-window.openModal = src=>{
+window.openModal = (src)=>{
   modalImg.src=src;
   imageModal.style.display="flex";
 };
